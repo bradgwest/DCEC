@@ -8,3 +8,4 @@ results/
 svm-classification.ipynb
 __pycache__/
 datasets.pyc
+*key.json
