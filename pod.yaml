@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dcec-training-pod
+spec:
+  containers:
+  - name: dcec
+    image: gcr.io/art-auction-prices/dcec-k8s:20200708_211948
+    # resources:
+    #   limits:
+    #     nvidia.com/gpu: 1

@@ -1,18 +1,12 @@
-FROM python:3.7-slim
+FROM gcr.io/deeplearning-platform-release/tf2-cpu.2-2:latest
 
-ENV GOOGLE_APPLICATION_CREDENTIALS=/build/paap-key.json
 ENV SERVICE_EMAIL=paap-crawl@art-auction-prices.iam.gserviceaccount.com
+ENV GCLOUD_PROJECT=art-auction-prices
 
-RUN apt-get update && \
-    apt-get --assume-yes install graphviz apt-transport-https ca-certificates gnupg curl
+RUN gcloud config set project $GCLOUD_PROJECT
 
-# Add gcloud sdk distribution URI
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-# Import Google Cloud Public Key
-RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
-
-# Install gcloud
-RUN apt-get update && apt-get --assume-yes install google-cloud-sdk
+# Install graphviz for plotting models
+RUN apt-get update && apt-get -y install graphviz
 
 WORKDIR build
 RUN mkdir results
@@ -27,7 +21,7 @@ RUN dcec/bin/pip install -r requirements.txt
 # Add files
 ADD *.py /build/
 
-RUN gcloud auth activate-service-account $SERVICE_EMAIL --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+RUN gcloud auth activate-service-account $SERVICE_EMAIL --key-file=/build/paap-key.json
 
-# CMD ["dcec/bin/python", "DCEC.py", "mnist"]
-CMD ["bash", "run_model.sh"]
+CMD ["dcec/bin/python", "DCEC.py", "mnist"]
+# CMD ["bash", "run_model.sh"]
