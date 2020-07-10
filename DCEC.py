@@ -5,6 +5,8 @@ from keras.engine.topology import Layer, InputSpec
 from keras.models import Model
 from keras.utils.vis_utils import plot_model
 from sklearn.cluster import KMeans
+import tensorflow as tf
+from tensorflow.python.client import device_lib
 import metrics
 from ConvAE import CAE
 
@@ -94,7 +96,8 @@ class DCEC(object):
         self.model = Model(inputs=self.cae.input,
                            outputs=[clustering_layer, self.cae.output])
 
-    def pretrain(self, x, batch_size=256, epochs=200, optimizer='adam', save_dir='results/temp'):
+    # TODO epochs was at 200, reduced to 100 for speed
+    def pretrain(self, x, batch_size=256, epochs=100, optimizer='adam', save_dir='results/temp'):
         print('...Pretraining...')
         self.cae.compile(optimizer=optimizer, loss='mse')
         from keras.callbacks import CSVLogger
@@ -232,8 +235,17 @@ if __name__ == "__main__":
     parser.add_argument('--tol', default=0.001, type=float)
     parser.add_argument('--cae_weights', default=None, help='This argument must be given')
     parser.add_argument('--save_dir', default='results/temp')
+    parser.add_argument('--assert-gpu', action="store_true")
     args = parser.parse_args()
     print(args)
+
+    # Make sure we actually have a GPU if we want one
+    print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+    devices = device_lib.list_local_devices()
+    print(devices)
+    if args.assert_gpu:
+        device_types = {d.device_type for d in devices}
+        assert "GPU" in device_types, "No GPU found in devices"
 
     import os
     if not os.path.exists(args.save_dir):

@@ -51,13 +51,39 @@ docker push $IMAGE_URI
 gcloud container clusters create paap-training-cluster \
     --num-nodes=1 \
     --zone=us-west1-b \
-    # --accelerator="type=nvidia-tesla-t4,count=1" \
+    --accelerator="type=nvidia-tesla-t4,count=1" \
     --machine-type="n1-highmem-2" \
-    --scopes="gke-default,storage-rw"
+    --scopes="gke-default,storage-rw" \
     --preemptible
 
 # installing GPU nodes
 # https://cloud.google.com/kubernetes-engine/docs/how-to/gpus#ubuntu
+# device drivers
+# use `gcloud container get-server-config` to get the default image type
+kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/master/nvidia-driver-installer/cos/daemonset-preloaded.yaml
+
+# Resize the cluster
+gcloud container clusters resize paap-training-cluster --num-nodes=0
+```
+
+Deploy an image to the cluster
+
+```sh
+kubectl apply -f ./pod.yaml
+kubectl get pods
+kubectl describe pod dcec-training-pod
+```
+
+```sh
+# Create a node pool
+gcloud container node-pools create dcec-pool \
+    --cluster=paap-training-cluster \
+    --num-nodes=1 \
+    --zone=us-west1-b \
+    --accelerator="type=nvidia-tesla-t4,count=1" \
+    --machine-type="n1-highmem-2" \
+    --scopes="gke-default,storage-rw" \
+    --preemptible
 ```
 
 
@@ -65,5 +91,10 @@ gcloud container clusters create paap-training-cluster \
 https://cloud.google.com/ai-platform/training/docs/using-containers
 https://cloud.google.com/ai-platform/deep-learning-vm/docs/cli
 https://cloud.google.com/ai-platform/deep-learning-vm/docs/introduction?hl=sk
+https://console.cloud.google.com/apis/credentials?project=art-auction-prices
 
+https://cloud.google.com/ai-platform/deep-learning-containers/docs/kubernetes-container
 
+TODO
+* Don't restart pod
+* 
